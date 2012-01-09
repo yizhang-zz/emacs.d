@@ -37,6 +37,7 @@
 		slime
 		auto-complete
 		auto-complete-clang
+		haskell-mode
 		xcscope
 		python)
 		(mapcar 'el-get-source-name el-get-sources)))
@@ -399,7 +400,7 @@
 (add-hook 'inferior-lisp-mode-hook (lambda () (inferior-slime-mode t)))
 
 ;; haskell-mode
-(load "~/.emacs.d/haskell-mode/haskell-site-file.el")
+; (load "~/.emacs.d/haskell-mode/haskell-site-file.el")
 (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
 (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
 
