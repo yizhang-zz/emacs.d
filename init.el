@@ -20,6 +20,8 @@
 	;;        :after (color-theme-twilight))
 	(:name ace-jump-mode
 	       :after (lambda () (global-set-key (kbd "C-c SPC") 'ace-jump-mode)))
+	; (:name slime
+	; 	   :load-path ("." "contrib"))
 	;; (:name highlight-symbol
 	;;        :after (lambda ()
 	;; 		(global-set-key [f10] 'highlight-symbol-at-point)
@@ -63,7 +65,7 @@
 
 (when (string-equal system-type "gnu/linux")
   (progn
-    (set-default-font "Monospace 10")))
+    (set-default-font "Monospace 11")))
 
 ;; (set-face-attribute 'font-lock-comment-face nil
 ;; 		    :family "Inconsolata" :height 160 :slant 'italic
@@ -388,6 +390,7 @@
 ;; lisp and slime
 (setq inferior-lisp-program "/usr/local/bin/ccl64")
 (require 'slime)
+(require 'slime-autoloads)
 (slime-setup '(slime-fancy))
 (add-hook 'lisp-mode-hook (lambda ()
 			    (slime-mode t)
