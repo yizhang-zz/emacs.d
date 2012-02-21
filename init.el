@@ -1,6 +1,21 @@
 (tool-bar-mode -1)
+(when (string-equal system-type "darwin")
+  (progn
+    (set-default-font "Consolas 14")
+    (set-face-font 'mode-line  "Lucida Grande-12")
+    ;; key mappings on Emacs Cocoa (Mac)
+    (setq ns-command-modifier 'meta)
+    (setq ns-option-modifier 'control)))
+
+(when (string-equal system-type "gnu/linux")
+  (progn
+    (set-default-font "Monospace 11")))
+
 (add-to-list 'load-path "~/.emacs.d")
 (add-to-list 'load-path "/usr/share/emacs/site-lisp")
+
+(fset 'yes-or-no-p 'y-or-n-p)
+(setq vc-handled-backends ())
 
 (add-to-list 'load-path "~/.emacs.d/el-get/el-get")
 (unless (require 'el-get nil t)
@@ -13,9 +28,14 @@
 (setq el-get-sources
       '((:name wrap-region
 	       :after (wrap-region-global-mode t))
+	;(:name autopair
+	;       :after (lambda () (autopair-global-mode)))
 	(:name yasnippet
-	       :type svn
-	       :url "http://yasnippet.googlecode.com/svn/tags/REL_0_6_1c/")
+	       :type git
+	       :url "https://github.com/capitaomorte/yasnippet"
+	       :after (lambda () (progn
+							   (require 'yasnippet)
+							   (yas/global-mode 1))))
 	;; (:name color-theme-twilight
 	;;        :after (color-theme-twilight))
 	(:name ace-jump-mode
@@ -43,31 +63,8 @@
 		(mapcar 'el-get-source-name el-get-sources)))
 (el-get 'sync my-packages)
 
-;; for python
-(setq python-shell-virtualenv-path "~/.virtualenvs/default")
-; (load-file "~/.emacs.d/emacs-for-python/epy-init.el")
-; (require 'epy-setup)
-; (require 'epy-python)
-; (require 'epy-editing)
-; (epy-setup-ipython)
-;;(global-hl-line-mode t)
-; (require 'pymacs)
-; (pymacs-load "ropemacs" "rope-")
-; (setq ropemacs-enable-autoimport t)
-
 ;; (set-face-attribute 'default nil :family "Monaco" :height 130)
 ;; (set-face-attribute 'default nil :family "Inconsolata" :height 130)
-(when (string-equal system-type "darwin")
-  (progn
-    (set-default-font "Menlo 14")
-    ;; key mappings on Emacs Cocoa (Mac)
-    (setq ns-command-modifier 'control)
-    (setq ns-option-modifier 'meta)))
-
-(when (string-equal system-type "gnu/linux")
-  (progn
-    (set-default-font "Monospace 11")))
-
 ;; (set-face-attribute 'font-lock-comment-face nil
 ;; 		    :family "Inconsolata" :height 160 :slant 'italic
 ;; 		    :background "#ffffff"
@@ -98,11 +95,12 @@
 (global-visual-line-mode 1)
 ;; (global-linum-mode 1)
 ;; (setq linum-format "%d ")
-;; (setq inhibit-startup-message t)
-(setq make-backup-files nil)
-(setq trash-directory (expand-file-name "~/.Trash")
-      delete-by-moving-to-trash t)
-;;(when window-system (speedbar 1))
+(setq inhibit-startup-message t)
+;; (setq make-backup-files nil)
+;; (setq trash-directory (expand-file-name "~/.Trash")
+;;       delete-by-moving-to-trash t)
+
+;; (when window-system (speedbar 1))
 
 ; (add-to-list 'load-path "~/.emacs.d/icicles")
 ; (require 'icicles)
@@ -131,8 +129,8 @@
 ; (require 'git-blame)
 
 ;; general emacs settings
-(add-to-list 'default-frame-alist '(height . 40))
-(add-to-list 'default-frame-alist '(width . 80))
+; (add-to-list 'default-frame-alist '(height . 40))
+; (add-to-list 'default-frame-alist '(width . 80))
 ;;(add-to-list 'default-frame-alist '(alpha 95 95))
 ;;(add-to-list 'default-frame-alist '(cursor-type . bar))
 ;;(add-to-list 'default-frame-alist '(font . "Menlo-12"))
@@ -174,8 +172,8 @@
   (mapc 'find-file ns-input-file)
   (setq ns-input-file nil))
 
-(load-file "~/.emacs.d/color-theme-monokai.el")
-(color-theme-monokai)
+;; (load-file "~/.emacs.d/color-theme-monokai.el")
+;; (color-theme-monokai)
 
 ;; copy & paste
 ;; (defun copy-from-osx ()
@@ -191,14 +189,66 @@
 ;; (setq interprogram-paste-function 'copy-from-osx)
 
 ;; spell check settings
-(setq ispell-program-name "/usr/local/bin/aspell")
-(setq ispell-list-command "list")
-(setq ispell-extra-args '("--sug-mode=fast"))
+;; It works!  It works!  After two hours of slogging, it works!
+(if (file-exists-p "/usr/local/bin/hunspell")                                         
+    (progn
+      (setq ispell-program-name "/usr/local/bin/hunspell")
+      (eval-after-load "ispell"
+        '(progn (defun ispell-get-coding-system () 'utf-8)))))
+(autoload 'wcheck-mode "wcheck-mode"
+    "Toggle wcheck-mode." t)
+  (autoload 'wcheck-change-language "wcheck-mode"
+    "Switch wcheck-mode languages." t)
+  (autoload 'wcheck-actions "wcheck-mode"
+    "Open actions menu." t)
+  (autoload 'wcheck-jump-forward "wcheck-mode"
+    "Move point forward to next marked text area." t)
+  (autoload 'wcheck-jump-backward "wcheck-mode"
+    "Move point backward to previous marked text area." t)
+(global-set-key (kbd "C-c w c") 'wcheck-mode)
+(global-set-key (kbd "C-c w l") 'wcheck-change-language)
+(global-set-key (kbd "C-c w a") 'wcheck-actions)
+(global-set-key (kbd "C-c w n") 'wcheck-jump-forward)
+(global-set-key (kbd "C-c w p") 'wcheck-jump-backward)
+
+(setq wcheck-language-data
+      '(("US English"
+	 (program . "/usr/local/bin/enchant")
+	 (args "-l" "-d" "en_US")
+	 (action-program . "/usr/local/bin/enchant")
+	 (action-args "-a" "-d" "en_US")
+	 (action-parser . enchant-suggestions-menu))))
+(setq-default wcheck-language "US English")
+(defun enchant-suggestions-menu (marked-text)
+    (cons (cons "[Add to dictionary]" 'enchant-add-to-dictionary)
+          (wcheck-parser-ispell-suggestions)))
+(defvar enchant-dictionaries-dir "~/.config/enchant")
+
+  (defun enchant-add-to-dictionary (marked-text)
+    (let* ((word (aref marked-text 0))
+           (language (aref marked-text 4))
+           (file (let ((code (nth 1 (member "-d" (wcheck-query-language-data
+                                                  language 'action-args)))))
+                   (when (stringp code)
+                     (concat (file-name-as-directory enchant-dictionaries-dir)
+                             code ".dic")))))
+
+      (when (and file (file-writable-p file))
+        (with-temp-buffer
+          (insert word) (newline)
+          (append-to-file (point-min) (point-max) file)
+          (message "Added word \"%s\" to the %s dictionary"
+                   word language)))))
+
+;; (setq ispell-program-name "/usr/local/bin/aspell")
+;; (setq ispell-list-command "list")
+;; (setq ispell-extra-args '("--sug-mode=ultra"))
+
 ;; (setq flyspell-issue-message-flag nil)
 ;; (global-set-key (kbd "C-c j") 'flyspell-check-previous-highlighted-word)
-;; (add-hook 'text-mode-hook
-;; 	  (lambda ()
-;; 	    (flyspell-mode 0)))
+(add-hook 'text-mode-hook
+	  (lambda ()
+	    (wcheck-mode t)))
 
 ;; cedet
 ;;(load-file "~/.emacs.d/cedet-1.0pre7/common/cedet.el")
@@ -216,25 +266,40 @@
  '(TeX-PDF-mode t)
  '(column-number-mode t)
  '(custom-safe-themes (quote ("04fd52af504d80a42d9487e3e6aa96b6937255d1" default)))
- '(fringe-mode (quote (0)) nil (fringe))
  '(gud-gdb-command-name "gdb --annotate=1")
  '(ido-enable-flex-matching t)
  '(ido-mode nil nil (ido))
  '(large-file-warning-threshold nil)
  '(org-agenda-files (quote ("~/org/sharing-cases.org" "~/org/isl.org" "~/org/polyhedral.org" "~/org/todo.org")))
- '(safe-local-variable-values (quote ((TeX-master . "paper")))))
-
+ '(safe-local-variable-values (quote ((TeX-master . "paper"))))
+ '(send-mail-function (quote sendmail-send-it)))
 
 ;; auto-complete
 (require 'auto-complete-config)
 (require 'auto-complete-clang)
-(add-to-list 'ac-dictionary-directories "~/.emacs.d/dict")
+; (add-to-list 'ac-dictionary-directories "~/.emacs.d/dict")
 ;; (require 'auto-complete-etags)
 (setq clang-completion-suppress-error 't
-      ac-auto-start t
+      ac-auto-start nil
       ac-dwim t)
+(add-to-list 'ac-sources '(ac-source-yasnippet))
 (ac-config-default)
 ;; (global-set-key "\M-/" 'auto-complete)
+
+(defface ac-yasnippet-candidate-face
+  '((t (:background "sandybrown" :foreground "black")))
+  "Face for yasnippet candidate.")
+ 
+(defface ac-yasnippet-selection-face
+  '((t (:background "coral3" :foreground "white")))
+  "Face for the yasnippet selected candidate.")
+ 
+; (defvar ac-source-yasnippet
+;   '((candidates . ac-yasnippet-candidate)
+;     (action . yas/expand)
+;     (candidate-face . ac-yasnippet-candidate-face)
+;     (selection-face . ac-yasnippet-selection-face))
+;   "Source for Yasnippet.")
 
 (defun auto-complete-settings ()
   "Settings for `auto-complete'."
@@ -295,6 +360,7 @@
 ;;(load "preview-latex.el" nil t t)
 (add-hook 'LaTeX-mode-hook (lambda ()
 			     ;;(cdlatex-mode t)
+			     (wcheck-mode t)
 			     (TeX-fold-mode t)
 			     (auto-fill-mode t)
 			     ;;(setq TeX-electric-sub-and-superscript 0)
@@ -351,13 +417,16 @@
 ;; 	 "|" "DONE(d!/!)" "CANCELLED(c@/!)")
 ;; 	(sequence "INBOX")))
 (setq org-capture-templates
-      '(("t" "todo" entry (file+datetree "todo.org")
-	 "* %?\n%a\n%i\nAdded: %U")))
+      '(("t" "Todo" entry (file+headline "todo.org" "Tasks")
+	 "* TODO %?\n%i\nAdded: %U\nFrom: %a")
+	("n" "Note" entry (file+datetree "notes.org")
+	 "* %?\n%i\nAdded: %U\nFrom: %a")))
 (global-set-key "\C-ca" 'org-agenda)
 (global-set-key "\C-cc" 'org-capture)
 (global-set-key "\C-cr" 'org-remember)
 (global-set-key "\C-cl" 'org-store-link)
-(add-hook 'org-mode-hook (lambda () 
+(add-hook 'org-mode-hook (lambda ()
+			   (wcheck-mode t)
 			   ;(setq truncate-lines nil)
 			   (org-indent-mode t)))
 (setq org-publish-project-alist
@@ -386,7 +455,7 @@
          :author "yizhang84@gmail.com"
          )))
 ;; paredit mode
-(autoload 'paredit-mode "paredit" "Minor mode for paredit" t)
+; (autoload 'paredit-mode "paredit" "Minor mode for paredit" t)
 
 ;; lisp and slime
 (setq inferior-lisp-program "/usr/local/bin/ccl64")
@@ -430,16 +499,24 @@
 	(add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
 	(add-hook 'lisp-mode-hook 'rainbow-delimiters-mode)))
 
+;; for python
+(setq python-shell-virtualenv-path "~/.virtualenvs/default")
+; (load-file "~/.emacs.d/emacs-for-python/epy-init.el")
+; (require 'epy-setup)
+; (require 'epy-python)
+; (require 'epy-editing)
+; (epy-setup-ipython)
+;;(global-hl-line-mode t)
+; (require 'pymacs)
+; (pymacs-load "ropemacs" "rope-")
+; (setq ropemacs-enable-autoimport t)
+
 ;; (add-to-list 'auto-mode-alist '("\\.py$\\'" . python-mode))
 ;; (autoload 'python-mode "python-mode" "Python Mode." t) 
 ;; (add-to-list 'interpreter-mode-alist '("python" . python-mode))
-;; (defun my-python-setup ()
-;;   (setq indent-tabs-mode nil
-;; 		tab-width 4
-;; 		python-indent-offset 4
-;; 		fill-column 78)
-;;   (require 'virtualenv))
-;; (add-hook 'python-mode-hook 'my-python-setup)
+(defun my-python-setup ()
+  nil)
+(add-hook 'python-mode-hook 'my-python-setup)
 
 ;; (add-to-list 'load-path "~/.emacs.d/pymacs")
 ;; (add-to-list 'load-path "~/.emacs.d/ropemacs")
@@ -501,6 +578,7 @@
  )
 
 (require 'deft)
+(setq deft-extension "org")
 (setq deft-text-mode 'org-mode)
 (global-set-key [f5] 'deft)
 
@@ -510,6 +588,11 @@
 (global-set-key (kbd "C-c F") 'iy-go-to-char-backward)
 (global-set-key (kbd "C-c ;") 'iy-go-to-char-continue)
 (global-set-key (kbd "C-c ,") 'iy-go-to-char-continue-backward)
+
+(require 'key-chord)
+(key-chord-mode 1)
+(key-chord-define-global "fj" 'iy-go-to-char)
+(key-chord-define-global "df" 'iy-go-to-char-backward)
 
 ;; emulate cmd-enter in textmate
 (defun newline-below()
@@ -523,7 +606,35 @@
 ;; (require 'saveplace)
 ;; (setq-default save-palce t)
 
-(require 'key-chord)
-(key-chord-mode 1)
-(key-chord-define-global "fj" 'iy-go-to-char)
-(key-chord-define-global "df" 'iy-go-to-char-backward)
+(which-func-mode t)
+
+;; highlight TODO and alike
+(defun highlight-todo ()
+  (font-lock-add-keywords nil
+			  '(("\\<\\(FIXME\\|TODO\\|BUG\\)" 1 font-lock-warning-face t))))
+(add-hook 'c-mode-common-hook
+	  'highlight-todo)
+(add-hook 'python-mode-hook
+	  'highlight-todo)
+
+(add-to-list 'load-path "~/.emacs.d/expand-region")
+(require 'expand-region)
+(global-set-key (kbd "C-@") 'er/expand-region)
+
+(autoload 'multi-term "multi-term" nil t)
+(autoload 'multi-term-next "multi-term" nil t)
+
+(setq multi-term-program "/bin/zsh") ;; or use zsh...
+
+;; only needed if you use autopair
+(add-hook 'term-mode-hook
+  #'(lambda () (setq autopair-dont-activate t)))
+
+(global-set-key (kbd "C-c t") 'multi-term-next)
+(global-set-key (kbd "C-c T") 'multi-term) ;; create a new one
+
+(setq recent-jump-threshold 4)
+(setq recent-jump-ring-length 10)
+(global-set-key (kbd "C-o") 'recent-jump-jump-backward)
+(global-set-key (kbd "M-o") 'recent-jump-jump-forward)
+(require 'recent-jump)
